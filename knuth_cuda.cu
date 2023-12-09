@@ -28,21 +28,25 @@ void computeCKHost(int n, int** h_ck, int** h_w) {
 }
 
 int main() {
-    int n = 1000;  // Example size
+    int n = 3000;  // Example size
     int **h_ck, **d_ck, **h_w, **d_w;
+    int **h_ck_host;
     int *d_ck_data, *d_w_data;
 
     // Allocate and initialize host memory
     h_ck = (int**)malloc(n * sizeof(int*));
     h_w = (int**)malloc(n * sizeof(int*));
+    h_ck_host = (int**)malloc(n * sizeof(int*));
 
     for (int i = 0; i < n; i++) {
         h_ck[i] = (int*)malloc(n * sizeof(int));
         h_w[i] = (int*)malloc(n * sizeof(int));
+        h_ck_host[i] = (int*)malloc(n * sizeof(int));
 
         for (int j = 0; j < n; j++) {
             h_ck[i][j] = INT_MAX;  // Initialize to a large value
             h_w[i][j] = rand() % 100;  // Example initialization
+            h_ck_host[i][j] = h_ck[i][j];  // Copy for host computation
         }
     }
 
@@ -90,17 +94,16 @@ int main() {
     // Host computation
     auto cpu_start = std::chrono::high_resolution_clock::now();
 
-    computeCKHost(n, h_ck, h_w);
+    computeCKHost(n, h_ck_host, h_w);
 
     auto cpu_end = std::chrono::high_resolution_clock::now();
 
-
-// Validate results
-for (int i = 0; i < n; i++) {
-    for (int j = 0; j < n; j++) {
-        assert(h_ck[i][j] == h_ck_array[i][j]);
+    // Validate results
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            assert(h_ck[i][j] == h_ck_host[i][j]);
+        }
     }
-}
 
     // Print timings
     std::chrono::duration<double, std::milli> gpu_duration = gpu_end - gpu_start;
@@ -118,9 +121,11 @@ for (int i = 0; i < n; i++) {
     for (int i = 0; i < n; i++) {
         free(h_ck[i]);
         free(h_w[i]);
+        free(h_ck_host[i]);
     }
     free(h_ck);
     free(h_w);
+    free(h_ck_host);
     free(h_ck_array);
     free(h_w_array);
 
