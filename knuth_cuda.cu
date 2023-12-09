@@ -94,12 +94,13 @@ int main() {
 
     auto cpu_end = std::chrono::high_resolution_clock::now();
 
-    // Validate results
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            assert(h_ck[i][j] == h_ck[i][j]);
-        }
+
+// Validate results
+for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
+        assert(h_ck[i][j] == h_ck_array[i][j]);
     }
+}
 
     // Print timings
     std::chrono::duration<double, std::milli> gpu_duration = gpu_end - gpu_start;
