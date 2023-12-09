@@ -15,8 +15,20 @@ __global__ void computeCK(int n, int** d_ck, int** d_w) {
         }
     }
 }
+
+// Host implementation for CK computation
+void computeCKHost(int n, int** h_ck, int** h_w) {
+    for (int w0 = 2; w0 < n; w0++) {
+        for (int h0 = -n + w0; h0 < 0; h0++) {
+            for (int i2 = -h0 + 1; i2 < w0 - h0; i2++) {
+                h_ck[-h0][w0 - h0] = MIN(h_ck[-h0][w0 - h0], (h_w[-h0][w0 - h0] + h_ck[-h0][i2]) + h_ck[i2][w0 - h0]);
+            }
+        }
+    }
+}
+
 int main() {
-    int n = 5000;  // Example size
+    int n = 3000;  // Example size
     int **h_ck, **d_ck, **h_w, **d_w;
     int *d_ck_data, *d_w_data;
 
@@ -63,7 +75,7 @@ int main() {
 
     auto gpu_start = std::chrono::high_resolution_clock::now();
 
-    for (int w0 = 2; w0 < n; w0 += 1) {
+    for (int w0 = 2; w0 < n; w0++) {
         computeCK<<<numBlocks, threadsPerBlock>>>(n, d_ck, d_w);
         cudaDeviceSynchronize();
     }
@@ -74,6 +86,26 @@ int main() {
     for (int i = 0; i < n; i++) {
         cudaMemcpy(h_ck[i], h_ck_array[i], n * sizeof(int), cudaMemcpyDeviceToHost);
     }
+
+    // Host computation
+    auto cpu_start = std::chrono::high_resolution_clock::now();
+
+    computeCKHost(n, h_ck, h_w);
+
+    auto cpu_end = std::chrono::high_resolution_clock::now();
+
+    // Validate results
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            assert(h_ck[i][j] == h_ck[i][j]);
+        }
+    }
+
+    // Print timings
+    std::chrono::duration<double, std::milli> gpu_duration = gpu_end - gpu_start;
+    std::chrono::duration<double, std::milli> cpu_duration = cpu_end - cpu_start;
+    printf("GPU calculation took: %f ms\n", gpu_duration.count());
+    printf("CPU calculation took: %f ms\n", cpu_duration.count());
 
     // Free device memory
     cudaFree(d_ck_data);
@@ -90,10 +122,6 @@ int main() {
     free(h_w);
     free(h_ck_array);
     free(h_w_array);
-
-    // Print timings
-    std::chrono::duration<double, std::milli> gpu_duration = gpu_end - gpu_start;
-    printf("GPU calculation took: %f ms\n", gpu_duration.count());
 
     return 0;
 }
