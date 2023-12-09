@@ -1,4 +1,4 @@
-[Clan] Info: parsing file #1 (sw.raw.c)
+[Clan] Info: parsing file #1 (knuth2.raw.c)
 #                                                     
 #          <|                                         
 #           A                                         
@@ -41,321 +41,87 @@ CONTEXT
 # Parameters are provided
 1
 <strings>
-N
+n
 </strings>
 
 # Number of statements
-5
+1
 
 # =============================================== Statement 1
 # Number of relations describing the statement:
-4
+7
 
 # ----------------------------------------------  1.1 Domain
 DOMAIN
-5 5 2 0 0 1
-# e/i|  i    j |  N |  1  
-   1    1    0    0   -1    ## i-1 >= 0
-   1   -1    0    1    0    ## -i+N >= 0
-   1    0    0    1   -1    ## N-1 >= 0
-   1    0    1    0   -1    ## j-1 >= 0
-   1    0   -1    1    0    ## -j+N >= 0
+8 6 3 0 0 1
+# e/i|  i    j    k |  n |  1  
+   1   -1    0    0    1   -1    ## -i+n-1 >= 0
+   1    1    0    0    0   -1    ## i-1 >= 0
+   1    0    0    0    1   -2    ## n-2 >= 0
+   1   -1    1    0    0   -1    ## -i+j-1 >= 0
+   1    0   -1    0    1    0    ## -j+n >= 0
+   1   -1    0    1    0   -1    ## -i+k-1 >= 0
+   1    0    1   -1    0   -1    ## j-k-1 >= 0
+   1   -1    1    0    0   -2    ## -i+j-2 >= 0
 
 # ----------------------------------------------  1.2 Scattering
 SCATTERING
-5 10 5 2 0 1
-# e/i| c1   c2   c3   c4   c5 |  i    j |  N |  1  
-   0   -1    0    0    0    0    0    0    0    0    ## c1 == 0
-   0    0   -1    0    0    0    1    0    0    0    ## c2 == i
-   0    0    0   -1    0    0    0    0    0    0    ## c3 == 0
-   0    0    0    0   -1    0    0    1    0    0    ## c4 == j
-   0    0    0    0    0   -1    0    0    0    0    ## c5 == 0
+7 13 7 3 0 1
+# e/i| c1   c2   c3   c4   c5   c6   c7 |  i    j    k |  n |  1  
+   0   -1    0    0    0    0    0    0    0    0    0    0    0    ## c1 == 0
+   0    0   -1    0    0    0    0    0   -1    0    0    0    0    ## c2 == -i
+   0    0    0   -1    0    0    0    0    0    0    0    0    0    ## c3 == 0
+   0    0    0    0   -1    0    0    0    0    1    0    0    0    ## c4 == j
+   0    0    0    0    0   -1    0    0    0    0    0    0    0    ## c5 == 0
+   0    0    0    0    0    0   -1    0    0    0    1    0    0    ## c6 == k
+   0    0    0    0    0    0    0   -1    0    0    0    0    0    ## c7 == 0
 
 # ----------------------------------------------  1.3 Access
 WRITE
-3 8 3 2 0 1
-# e/i| Arr  [1]  [2]|  i    j |  N |  1  
-   0   -1    0    0    0    0    0    4    ## Arr == m1
-   0    0   -1    0    1    0    0    0    ## [1] == i
-   0    0    0   -1    0    1    0    0    ## [2] == j
+3 9 3 3 0 1
+# e/i| Arr  [1]  [2]|  i    j    k |  n |  1  
+   0   -1    0    0    0    0    0    0    5    ## Arr == ck
+   0    0   -1    0    1    0    0    0    0    ## [1] == i
+   0    0    0   -1    0    1    0    0    0    ## [2] == j
 
 READ
-1 6 1 2 0 1
-# e/i| Arr|  i    j |  N |  1  
-   0   -1    0    0    0    5    ## Arr == INT_MIN
+3 9 3 3 0 1
+# e/i| Arr  [1]  [2]|  i    j    k |  n |  1  
+   0   -1    0    0    0    0    0    0    5    ## Arr == ck
+   0    0   -1    0    1    0    0    0    0    ## [1] == i
+   0    0    0   -1    0    1    0    0    0    ## [2] == j
+
+READ
+3 9 3 3 0 1
+# e/i| Arr  [1]  [2]|  i    j    k |  n |  1  
+   0   -1    0    0    0    0    0    0    7    ## Arr == w
+   0    0   -1    0    1    0    0    0    0    ## [1] == i
+   0    0    0   -1    0    1    0    0    0    ## [2] == j
+
+READ
+3 9 3 3 0 1
+# e/i| Arr  [1]  [2]|  i    j    k |  n |  1  
+   0   -1    0    0    0    0    0    0    5    ## Arr == ck
+   0    0   -1    0    1    0    0    0    0    ## [1] == i
+   0    0    0   -1    0    0    1    0    0    ## [2] == k
+
+READ
+3 9 3 3 0 1
+# e/i| Arr  [1]  [2]|  i    j    k |  n |  1  
+   0   -1    0    0    0    0    0    0    5    ## Arr == ck
+   0    0   -1    0    0    0    1    0    0    ## [1] == k
+   0    0    0   -1    0    1    0    0    0    ## [2] == j
 
 # ----------------------------------------------  1.4 Statement Extensions
 # Number of Statement Extensions
 1
 <body>
 # Number of original iterators
-2
-# List of original iterators
-i j
-# Statement body expression
-m1[i][j] = INT_MIN;
-</body>
-
-# =============================================== Statement 2
-# Number of relations describing the statement:
-6
-
-# ----------------------------------------------  2.1 Domain
-DOMAIN
-7 6 3 0 0 1
-# e/i|  i    j    k |  N |  1  
-   1    1    0    0    0   -1    ## i-1 >= 0
-   1   -1    0    0    1    0    ## -i+N >= 0
-   1    0    0    0    1   -1    ## N-1 >= 0
-   1    0    1    0    0   -1    ## j-1 >= 0
-   1    0   -1    0    1    0    ## -j+N >= 0
-   1    0    0    1    0   -1    ## k-1 >= 0
-   1    1    0   -1    0    0    ## i-k >= 0
-
-# ----------------------------------------------  2.2 Scattering
-SCATTERING
-7 13 7 3 0 1
-# e/i| c1   c2   c3   c4   c5   c6   c7 |  i    j    k |  N |  1  
-   0   -1    0    0    0    0    0    0    0    0    0    0    0    ## c1 == 0
-   0    0   -1    0    0    0    0    0    1    0    0    0    0    ## c2 == i
-   0    0    0   -1    0    0    0    0    0    0    0    0    0    ## c3 == 0
-   0    0    0    0   -1    0    0    0    0    1    0    0    0    ## c4 == j
-   0    0    0    0    0   -1    0    0    0    0    0    0    1    ## c5 == 1
-   0    0    0    0    0    0   -1    0    0    0    1    0    0    ## c6 == k
-   0    0    0    0    0    0    0   -1    0    0    0    0    0    ## c7 == 0
-
-# ----------------------------------------------  2.3 Access
-WRITE
-3 9 3 3 0 1
-# e/i| Arr  [1]  [2]|  i    j    k |  N |  1  
-   0   -1    0    0    0    0    0    0    4    ## Arr == m1
-   0    0   -1    0    1    0    0    0    0    ## [1] == i
-   0    0    0   -1    0    1    0    0    0    ## [2] == j
-
-READ
-3 9 3 3 0 1
-# e/i| Arr  [1]  [2]|  i    j    k |  N |  1  
-   0   -1    0    0    0    0    0    0    4    ## Arr == m1
-   0    0   -1    0    1    0    0    0    0    ## [1] == i
-   0    0    0   -1    0    1    0    0    0    ## [2] == j
-
-READ
-3 9 3 3 0 1
-# e/i| Arr  [1]  [2]|  i    j    k |  N |  1  
-   0   -1    0    0    0    0    0    0    8    ## Arr == H
-   0    0   -1    0    1    0   -1    0    0    ## [1] == i-k
-   0    0    0   -1    0    1    0    0    0    ## [2] == j
-
-READ
-2 8 2 3 0 1
-# e/i| Arr  [1]|  i    j    k |  N |  1  
-   0   -1    0    0    0    0    0    9    ## Arr == W
-   0    0   -1    0    0    1    0    0    ## [1] == k
-
-# ----------------------------------------------  2.4 Statement Extensions
-# Number of Statement Extensions
-1
-<body>
-# Number of original iterators
 3
 # List of original iterators
 i j k
 # Statement body expression
-m1[i][j] = MAX(m1[i][j] ,H[i-k][j] + W[k]);
-</body>
-
-# =============================================== Statement 3
-# Number of relations describing the statement:
-4
-
-# ----------------------------------------------  3.1 Domain
-DOMAIN
-5 5 2 0 0 1
-# e/i|  i    j |  N |  1  
-   1    1    0    0   -1    ## i-1 >= 0
-   1   -1    0    1    0    ## -i+N >= 0
-   1    0    0    1   -1    ## N-1 >= 0
-   1    0    1    0   -1    ## j-1 >= 0
-   1    0   -1    1    0    ## -j+N >= 0
-
-# ----------------------------------------------  3.2 Scattering
-SCATTERING
-5 10 5 2 0 1
-# e/i| c1   c2   c3   c4   c5 |  i    j |  N |  1  
-   0   -1    0    0    0    0    0    0    0    0    ## c1 == 0
-   0    0   -1    0    0    0    1    0    0    0    ## c2 == i
-   0    0    0   -1    0    0    0    0    0    0    ## c3 == 0
-   0    0    0    0   -1    0    0    1    0    0    ## c4 == j
-   0    0    0    0    0   -1    0    0    0    2    ## c5 == 2
-
-# ----------------------------------------------  3.3 Access
-WRITE
-3 8 3 2 0 1
-# e/i| Arr  [1]  [2]|  i    j |  N |  1  
-   0   -1    0    0    0    0    0   10    ## Arr == m2
-   0    0   -1    0    1    0    0    0    ## [1] == i
-   0    0    0   -1    0    1    0    0    ## [2] == j
-
-READ
-1 6 1 2 0 1
-# e/i| Arr|  i    j |  N |  1  
-   0   -1    0    0    0    5    ## Arr == INT_MIN
-
-# ----------------------------------------------  3.4 Statement Extensions
-# Number of Statement Extensions
-1
-<body>
-# Number of original iterators
-2
-# List of original iterators
-i j
-# Statement body expression
-m2[i][j] = INT_MIN;
-</body>
-
-# =============================================== Statement 4
-# Number of relations describing the statement:
-6
-
-# ----------------------------------------------  4.1 Domain
-DOMAIN
-7 6 3 0 0 1
-# e/i|  i    j    k |  N |  1  
-   1    1    0    0    0   -1    ## i-1 >= 0
-   1   -1    0    0    1    0    ## -i+N >= 0
-   1    0    0    0    1   -1    ## N-1 >= 0
-   1    0    1    0    0   -1    ## j-1 >= 0
-   1    0   -1    0    1    0    ## -j+N >= 0
-   1    0    0    1    0   -1    ## k-1 >= 0
-   1    0    1   -1    0    0    ## j-k >= 0
-
-# ----------------------------------------------  4.2 Scattering
-SCATTERING
-7 13 7 3 0 1
-# e/i| c1   c2   c3   c4   c5   c6   c7 |  i    j    k |  N |  1  
-   0   -1    0    0    0    0    0    0    0    0    0    0    0    ## c1 == 0
-   0    0   -1    0    0    0    0    0    1    0    0    0    0    ## c2 == i
-   0    0    0   -1    0    0    0    0    0    0    0    0    0    ## c3 == 0
-   0    0    0    0   -1    0    0    0    0    1    0    0    0    ## c4 == j
-   0    0    0    0    0   -1    0    0    0    0    0    0    3    ## c5 == 3
-   0    0    0    0    0    0   -1    0    0    0    1    0    0    ## c6 == k
-   0    0    0    0    0    0    0   -1    0    0    0    0    0    ## c7 == 0
-
-# ----------------------------------------------  4.3 Access
-WRITE
-3 9 3 3 0 1
-# e/i| Arr  [1]  [2]|  i    j    k |  N |  1  
-   0   -1    0    0    0    0    0    0   10    ## Arr == m2
-   0    0   -1    0    1    0    0    0    0    ## [1] == i
-   0    0    0   -1    0    1    0    0    0    ## [2] == j
-
-READ
-3 9 3 3 0 1
-# e/i| Arr  [1]  [2]|  i    j    k |  N |  1  
-   0   -1    0    0    0    0    0    0   10    ## Arr == m2
-   0    0   -1    0    1    0    0    0    0    ## [1] == i
-   0    0    0   -1    0    1    0    0    0    ## [2] == j
-
-READ
-3 9 3 3 0 1
-# e/i| Arr  [1]  [2]|  i    j    k |  N |  1  
-   0   -1    0    0    0    0    0    0    8    ## Arr == H
-   0    0   -1    0    1    0    0    0    0    ## [1] == i
-   0    0    0   -1    0    1   -1    0    0    ## [2] == j-k
-
-READ
-2 8 2 3 0 1
-# e/i| Arr  [1]|  i    j    k |  N |  1  
-   0   -1    0    0    0    0    0    9    ## Arr == W
-   0    0   -1    0    0    1    0    0    ## [1] == k
-
-# ----------------------------------------------  4.4 Statement Extensions
-# Number of Statement Extensions
-1
-<body>
-# Number of original iterators
-3
-# List of original iterators
-i j k
-# Statement body expression
-m2[i][j] = MAX(m2[i][j] ,H[i][j-k] + W[k]);
-</body>
-
-# =============================================== Statement 5
-# Number of relations describing the statement:
-8
-
-# ----------------------------------------------  5.1 Domain
-DOMAIN
-5 5 2 0 0 1
-# e/i|  i    j |  N |  1  
-   1    1    0    0   -1    ## i-1 >= 0
-   1   -1    0    1    0    ## -i+N >= 0
-   1    0    0    1   -1    ## N-1 >= 0
-   1    0    1    0   -1    ## j-1 >= 0
-   1    0   -1    1    0    ## -j+N >= 0
-
-# ----------------------------------------------  5.2 Scattering
-SCATTERING
-5 10 5 2 0 1
-# e/i| c1   c2   c3   c4   c5 |  i    j |  N |  1  
-   0   -1    0    0    0    0    0    0    0    0    ## c1 == 0
-   0    0   -1    0    0    0    1    0    0    0    ## c2 == i
-   0    0    0   -1    0    0    0    0    0    0    ## c3 == 0
-   0    0    0    0   -1    0    0    1    0    0    ## c4 == j
-   0    0    0    0    0   -1    0    0    0    4    ## c5 == 4
-
-# ----------------------------------------------  5.3 Access
-WRITE
-3 8 3 2 0 1
-# e/i| Arr  [1]  [2]|  i    j |  N |  1  
-   0   -1    0    0    0    0    0    8    ## Arr == H
-   0    0   -1    0    1    0    0    0    ## [1] == i
-   0    0    0   -1    0    1    0    0    ## [2] == j
-
-READ
-3 8 3 2 0 1
-# e/i| Arr  [1]  [2]|  i    j |  N |  1  
-   0   -1    0    0    0    0    0    8    ## Arr == H
-   0    0   -1    0    1    0    0   -1    ## [1] == i-1
-   0    0    0   -1    0    1    0   -1    ## [2] == j-1
-
-READ
-2 7 2 2 0 1
-# e/i| Arr  [1]|  i    j |  N |  1  
-   0   -1    0    0    0    0   12    ## Arr == a
-   0    0   -1    1    0    0    0    ## [1] == i
-
-READ
-2 7 2 2 0 1
-# e/i| Arr  [1]|  i    j |  N |  1  
-   0   -1    0    0    0    0   13    ## Arr == b
-   0    0   -1    1    0    0    0    ## [1] == i
-
-READ
-3 8 3 2 0 1
-# e/i| Arr  [1]  [2]|  i    j |  N |  1  
-   0   -1    0    0    0    0    0    4    ## Arr == m1
-   0    0   -1    0    1    0    0    0    ## [1] == i
-   0    0    0   -1    0    1    0    0    ## [2] == j
-
-READ
-3 8 3 2 0 1
-# e/i| Arr  [1]  [2]|  i    j |  N |  1  
-   0   -1    0    0    0    0    0   10    ## Arr == m2
-   0    0   -1    0    1    0    0    0    ## [1] == i
-   0    0    0   -1    0    1    0    0    ## [2] == j
-
-# ----------------------------------------------  5.4 Statement Extensions
-# Number of Statement Extensions
-1
-<body>
-# Number of original iterators
-2
-# List of original iterators
-i j
-# Statement body expression
-H[i][j] = MAX(0, MAX( H[i-1][j-1] + s(a[i], b[i]), MAX(m1[i][j], m2[i][j])));
+ck[i][j] = MIN(ck[i][j], w[i][j]+ck[i][k]+ck[k][j]);
 </body>
 
 # =============================================== Extensions
@@ -365,32 +131,26 @@ b0 i b1 j b2 k b3
 
 <arrays>
 # Number of arrays
-13
+7
 # Mapping array-identifiers/array-names
 1 i
-2 N
+2 n
 3 j
-4 m1
-5 INT_MIN
-6 k
-7 MAX
-8 H
-9 W
-10 m2
-11 s
-12 a
-13 b
+4 k
+5 ck
+6 MIN
+7 w
 </arrays>
 
 <coordinates>
 # File name
-sw.raw.c
+knuth2.raw.c
 # Starting line and column
 2 0
 # Ending line and column
-14 0
+7 0
 # Indentation
-0
+8
 </coordinates>
 
 </OpenScop>

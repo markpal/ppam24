@@ -4,4 +4,4 @@
                for(k=i+1; k<j; k++)
                   ck[i][j] = MIN(ck[i][j], w[i][j]+ck[i][k]+ck[k][j]);
         }
-        #pragma endscop
+        #pragma endscop 
