@@ -6,6 +6,7 @@ __global__ void cudaKernel(int n, int *ck, int *w) {
     int w0 = blockIdx.x * blockDim.x + threadIdx.x + 2;
 
     if (w0 < n) {
+        #pragma unroll
         for (int h0 = -n + w0; h0 < 0; h0 += 1) {
             for (int i2 = -h0 + 1; i2 < w0 - h0; i2 += 1) {
                 ck[-h0 * n + w0 - h0] = MIN(ck[-h0 * n + w0 - h0], (w[-h0 * n + w0 - h0] + ck[-h0 * n + i2]) + ck[i2 * n + w0 - h0]);
@@ -15,12 +16,12 @@ __global__ void cudaKernel(int n, int *ck, int *w) {
 }
 
 int main() {
-    // Assuming you have allocated and initialized your arrays on the host (w, ck)
-
+    // Assuming you have allocated and initialized your arrays on the host
     int n = /* your value for n */;
-    int *d_ck, *d_w;
+    int *ck, *w;  // Assuming these arrays are properly declared and initialized
 
     // Allocate device memory
+    int *d_ck, *d_w;
     cudaMalloc((void**)&d_ck, sizeof(int) * n * n);
     cudaMalloc((void**)&d_w, sizeof(int) * n * n);
 
