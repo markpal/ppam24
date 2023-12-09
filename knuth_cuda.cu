@@ -17,7 +17,7 @@ __global__ void cudaKernel(int n, int *ck, int *w) {
 
 int main() {
     // Assuming you have allocated and initialized your arrays on the host
-    int n = /* your value for n */;
+    int n = 100;/* your value for n */;
     int *ck, *w;  // Assuming these arrays are properly declared and initialized
 
     // Allocate device memory
