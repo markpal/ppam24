@@ -11,11 +11,10 @@ __global__ void computeCK(int n, int** d_ck, int** d_w) {
 
     if (h0 < 0) {
         for (int i2 = -h0 + 1; i2 < n - h0; i2++) {
-            atomicMin(&d_ck[-h0][n - h0], d_w[-h0][n - h0] + d_ck[-h0][i2] + d_ck[i2][n - h0]);
+            d_ck[-h0][n - h0] = MIN(d_ck[-h0][n - h0], (d_w[-h0][n - h0] + d_ck[-h0][i2]) + d_ck[i2][n - h0]);
         }
     }
 }
-
 int main() {
     int n = 3000;  // Example size
     int **h_ck, **d_ck, **h_w, **d_w;
