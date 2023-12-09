@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>  // Include the algorithm header for the min function
 #include <cuda_runtime.h>
 
 __global__ void cudaKernel(int n, int** w, int** ck) {
@@ -6,11 +7,13 @@ __global__ void cudaKernel(int n, int** w, int** ck) {
     if (w0 < n) {
         for (int h0 = -n + w0; h0 < 0; h0 += 1) {
             for (int i2 = -h0 + 1; i2 < w0 - h0; i2 += 1) {
-                ck[(w0 - h0) * n + (-h0)] = fmin(ck[(w0 - h0) * n + (-h0)], (w[(w0 - h0) * n + (-h0)] + ck[(w0 - h0) * n + (-h0) - i2]) + ck[(w0 - h0) * n + (-h0) + i2]);
+                ck[(w0 - h0) * n + (-h0)] = std::min(ck[(w0 - h0) * n + (-h0)], (w[(w0 - h0) * n + (-h0)] + ck[(w0 - h0) * n + (-h0) - i2]) + ck[(w0 - h0) * n + (-h0) + i2]);
             }
         }
     }
 }
+
+// Rest of the code remains unchanged...
 
 
 int main() {
