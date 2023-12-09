@@ -6,10 +6,12 @@
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
-__global__ void computeCK(int n, int** d_ck, int** d_w) {
-    int h0 = blockIdx.x * blockDim.x + threadIdx.x;
+const int CHUNK_SIZE = 4;
 
-    if (h0 < 0) {
+__global__ void computeCK(int n, int** d_ck, int** d_w) {
+    int h0_start = blockIdx.x * blockDim.x + threadIdx.x;
+
+    for (int h0 = h0_start; h0 < 0; h0 += blockDim.x * gridDim.x) {
         for (int i2 = -h0 + 1; i2 < n - h0; i2++) {
             d_ck[-h0][n - h0] = MIN(d_ck[-h0][n - h0], (d_w[-h0][n - h0] + d_ck[-h0][i2]) + d_ck[i2][n - h0]);
         }
@@ -18,17 +20,20 @@ __global__ void computeCK(int n, int** d_ck, int** d_w) {
 
 // Host implementation for CK computation
 void computeCKHost(int n, int** h_ck, int** h_w) {
-    for (int w0 = 2; w0 < n; w0++) {
+    for (int w0 = 2; w0 < n; w0 += CHUNK_SIZE) {
+        #pragma omp parallel for
         for (int h0 = -n + w0; h0 < 0; h0++) {
             for (int i2 = -h0 + 1; i2 < w0 - h0; i2++) {
-                h_ck[-h0][w0 - h0] = MIN(h_ck[-h0][w0 - h0], (h_w[-h0][w0 - h0] + h_ck[-h0][i2]) + h_ck[i2][w0 - h0]);
+                for (int k = 0; k < CHUNK_SIZE; k++) {
+                    h_ck[-h0][w0 - h0 + k] = MIN(h_ck[-h0][w0 - h0 + k], (h_w[-h0][w0 - h0 + k] + h_ck[-h0][i2 + k]) + h_ck[i2 + k][w0 - h0 + k]);
+                }
             }
         }
     }
 }
 
 int main() {
-    int n = 100;  // Example size
+    int n = 500;  // Example size
     int **h_ck, **d_ck, **h_w, **d_w;
     int **h_ck_host;
     int *d_ck_data, *d_w_data;
@@ -79,7 +84,7 @@ int main() {
 
     auto gpu_start = std::chrono::high_resolution_clock::now();
 
-    for (int w0 = 2; w0 < n; w0++) {
+    for (int w0 = 2; w0 < n; w0 += CHUNK_SIZE) {
         computeCK<<<numBlocks, threadsPerBlock>>>(n, d_ck, d_w);
         cudaDeviceSynchronize();
     }
