@@ -28,7 +28,7 @@ void computeCKHost(int n, int** h_ck, int** h_w) {
 }
 
 int main() {
-    int n = 3000;  // Example size
+    int n = 1000;  // Example size
     int **h_ck, **d_ck, **h_w, **d_w;
     int *d_ck_data, *d_w_data;
 
