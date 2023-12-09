@@ -16,7 +16,7 @@ __global__ void computeCK(int n, int** d_ck, int** d_w) {
     }
 }
 int main() {
-    int n = 3000;  // Example size
+    int n = 5000;  // Example size
     int **h_ck, **d_ck, **h_w, **d_w;
     int *d_ck_data, *d_w_data;
 
