@@ -3,125 +3,118 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <chrono>
+#include <iostream>
 
+using namespace std;
+
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define CHUNK_SIZE 4
 
-// Device paired function
-__device__ int paired_device(int a, int b) {
-    // Replace this with your implementation of the paired function
-    return a * b;  // Example implementation, replace with the actual logic
+// Device sigma function
+__device__ int sigma_device(int a, int b) {
+    return a + b;
 }
 
-int ERT = 1;
-
-// Host paired function
-int paired_host(int a, int b) {
-    // Replace this with your implementation of the paired function
-    return a * b;  // Example implementation, replace with the actual logic
-	
+// Host sigma function
+int sigma_host(int a, int b) {
+    return a + b;
 }
 
-// Device max function
-__device__ int max_device(int a, int b) {
-    return MAX(a, b);
-}
-
-
-__global__ void computeQ(int N, int c1, int** d_Q1, int** d_Qbp1) {
+__global__ void computeCK(int n, int c1, int** d_CK, int** d_W) {
     int globalThreadIdx = blockIdx.x * blockDim.x + threadIdx.x;
     int c3_start = globalThreadIdx * CHUNK_SIZE;
     int c3_end = c3_start + CHUNK_SIZE;
-	
-	int ERT=1;
 
-    for (int c3 = c3_start; c3 < c3_end && c3 < (c1 + 1) / 2; c3++) {
-        if (c3 >= max_device(0, -N + c1 + 1)) {
-            d_Q1[N-c1+c3-1][N-c1+2*c3] = d_Q1[N-c1+c3-1][N-c1+2*c3-1];
-            for (int c5 = 0; c5 <= c3; c5++) {
-                d_Qbp1[c5+(N-c1+c3-1)][N-c1+2*c3] = d_Q1[c5+(N-c1+c3-1)+1][N-c1+2*c3-1] * ERT * paired_device(c5+(N-c1+c3-1),N-c1+2*c3-1);
-                d_Q1[N-c1+c3-1][N-c1+2*c3] += d_Q1[N-c1+c3-1][c5+(N-c1+c3-1)] * d_Qbp1[c5+(N-c1+c3-1)][N-c1+2*c3];
+    for (int c3 = c3_start; c3 < c3_end && c3 <= c1 / 2; c3++) {
+        if (c3 >= MAX(1, -n + c1 + 2)) {
+            for (int c5 = 0; c5 < c3; c5++) {
+                d_CK[n-c1+c3-1][n-c1+2*c3] = MIN(d_CK[n-c1+c3-1][n-c1+2*c3], d_W[n-c1+c3-1][n-c1+2*c3] + d_CK[n-c1+c3-1][n-c1+c3+c5] + d_CK[n-c1+c3+c5][n-c1+2*c3]);
             }
         }
     }
 }
 
 int main() {
-    int N = 5000;  // Example size
-    int **h_Q1, **d_Q1, **h_Qbp1, **d_Qbp1, **cpu_Q1, **cpu_Qbp1;
-    int *d_Q1_data, *d_Qbp1_data;
+    int N = 5000;
+    int n = N + 2;
+    int **h_CK, **d_CK, **cpu_CK, **h_W, **d_W, **cpu_W;
+    int *d_CK_data, *d_W_data;
+
+
 
     // Allocate and initialize host memory
-    h_Q1 = (int**)malloc(N * sizeof(int*));
-    h_Qbp1 = (int**)malloc(N * sizeof(int*));
-    cpu_Q1 = (int**)malloc(N * sizeof(int*));
-    cpu_Qbp1 = (int**)malloc(N * sizeof(int*));
+    h_CK = (int**)malloc(n * sizeof(int*));
+    cpu_CK = (int**)malloc(n * sizeof(int*));
+    h_W = (int**)malloc(n * sizeof(int*));
+    cpu_W = (int**)malloc(n * sizeof(int*));
 
-    for (int i = 0; i < N; i++) {
-        h_Q1[i] = (int*)malloc(N * sizeof(int));
-        h_Qbp1[i] = (int*)malloc(N * sizeof(int));
-        cpu_Q1[i] = (int*)malloc(N * sizeof(int));
-        cpu_Qbp1[i] = (int*)malloc(N * sizeof(int));
+    for (int i = 0; i < n; i++) {
+        h_CK[i] = (int*)malloc(n * sizeof(int));
+        cpu_CK[i] = (int*)malloc(n * sizeof(int));
+        h_W[i] = (int*)malloc(n * sizeof(int));
+        cpu_W[i] = (int*)malloc(n * sizeof(int));
 
-        for (int j = 0; j < N; j++) {
-            h_Q1[i][j] = rand() % 100;  // Example initialization
-            h_Qbp1[i][j] = rand() % 100;  // Example initialization
-            cpu_Q1[i][j] = h_Q1[i][j];
-            cpu_Qbp1[i][j] = h_Qbp1[i][j];
+        for (int j = 0; j < n; j++) {
+            h_CK[i][j] = rand() % 100;  // Example initialization for CK
+            h_W[i][j] = rand() % 100;  // Example initialization for W
+            cpu_CK[i][j] = h_CK[i][j];
+            cpu_W[i][j] = h_W[i][j];
         }
     }
 
     // Allocate device memory
-    cudaMalloc(&d_Q1_data, N * N * sizeof(int));
-    cudaMalloc(&d_Qbp1_data, N * N * sizeof(int));
-    cudaMalloc(&d_Q1, N * sizeof(int*));
-    cudaMalloc(&d_Qbp1, N * sizeof(int*));
+    cudaMalloc(&d_CK_data, n * n * sizeof(int));
+    cudaMalloc(&d_CK, n * sizeof(int*));
 
-    int **h_Q1_array = (int **)malloc(N * sizeof(int *));
-    int **h_Qbp1_array = (int **)malloc(N * sizeof(int *));
+    cudaMalloc(&d_W_data, n * n * sizeof(int));
+    cudaMalloc(&d_W, n * sizeof(int*));
 
-    for (int i = 0; i < N; i++) {
-        h_Q1_array[i] = d_Q1_data + i * N;
-        h_Qbp1_array[i] = d_Qbp1_data + i * N;
+    int **h_CK_array = (int **)malloc(n * sizeof(int *));
+    for (int i = 0; i < n; i++) {
+        h_CK_array[i] = d_CK_data + i * n;
     }
+    cudaMemcpy(d_CK, h_CK_array, n * sizeof(int *), cudaMemcpyHostToDevice);
 
-    cudaMemcpy(d_Q1, h_Q1_array, N * sizeof(int *), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_Qbp1, h_Qbp1_array, N * sizeof(int *), cudaMemcpyHostToDevice);
+    int **h_W_array = (int **)malloc(n * sizeof(int *));
+    for (int i = 0; i < n; i++) {
+        h_W_array[i] = d_W_data + i * n;
+    }
+    cudaMemcpy(d_W, h_W_array, n * sizeof(int *), cudaMemcpyHostToDevice);
 
     // Copy data to device
-    for (int i = 0; i < N; i++) {
-        cudaMemcpy(h_Q1_array[i], h_Q1[i], N * sizeof(int), cudaMemcpyHostToDevice);
-        cudaMemcpy(h_Qbp1_array[i], h_Qbp1[i], N * sizeof(int), cudaMemcpyHostToDevice);
+    for (int i = 0; i < n; i++) {
+        cudaMemcpy(h_CK_array[i], h_CK[i], n * sizeof(int), cudaMemcpyHostToDevice);
+        cudaMemcpy(h_W_array[i], h_W[i], n * sizeof(int), cudaMemcpyHostToDevice);
     }
+
+
 
     // GPU computation
     int threadsPerBlock = 256;
-    int numBlocks = (N / (threadsPerBlock * CHUNK_SIZE)) + 1;
+    int numBlocks = (n / (threadsPerBlock * CHUNK_SIZE)) + 1;
 
     auto gpu_start = std::chrono::high_resolution_clock::now();
 
-    for (int c1 = 1; c1 < 2 * N - 2; c1 += 1) {
-        computeQ<<<numBlocks, threadsPerBlock>>>(N, c1, d_Q1, d_Qbp1);
+    for (int c1 = 2; c1 < 2 * n - 3; c1 += 1) {
+        computeCK<<<numBlocks, threadsPerBlock>>>(N, c1, d_CK, d_W);
         cudaDeviceSynchronize();
     }
 
     auto gpu_end = std::chrono::high_resolution_clock::now();
 
     // Copy results back to host
-    for (int i = 0; i < N; i++) {
-        cudaMemcpy(h_Q1[i], h_Q1_array[i], N * sizeof(int), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_Qbp1[i], h_Qbp1_array[i], N * sizeof(int), cudaMemcpyDeviceToHost);
+    for (int i = 0; i < n; i++) {
+        cudaMemcpy(h_CK[i], h_CK_array[i], n * sizeof(int), cudaMemcpyDeviceToHost);
     }
 
     // CPU computation
     auto cpu_start = std::chrono::high_resolution_clock::now();
 
-    for (int c1 = 1; c1 < 2 * N - 2; c1 += 1) {
-        for (int c3 = max(0, -N + c1 + 1); c3 < (c1 + 1) / 2; c3++) {
-            cpu_Q1[N-c1+c3-1][N-c1+2*c3] = cpu_Q1[N-c1+c3-1][N-c1+2*c3-1];
-            for (int c5 = 0; c5 <= c3; c5++) {
-                cpu_Qbp1[c5+(N-c1+c3-1)][N-c1+2*c3] = cpu_Q1[c5+(N-c1+c3-1)+1][N-c1+2*c3-1] * ERT * paired_host(c5+(N-c1+c3-1),N-c1+2*c3-1);
-                cpu_Q1[N-c1+c3-1][N-c1+2*c3] += cpu_Q1[N-c1+c3-1][c5+(N-c1+c3-1)] * cpu_Qbp1[c5+(N-c1+c3-1)][N-c1+2*c3];
+    for (int c1 = 2; c1 < 2 * N - 3; c1 += 1) {
+        for (int c3 = max(1, -N + c1 + 2); c3 <= c1 / 2; c3++) {
+            for (int c5 = 0; c5 < c3; c5++) {
+                cpu_CK[N-c1+c3-1][N-c1+2*c3] = MIN(cpu_CK[N-c1+c3-1][N-c1+2*c3], cpu_W[N-c1+c3-1][N-c1+2*c3] + cpu_CK[N-c1+c3-1][N-c1+c3+c5] + cpu_CK[N-c1+c3+c5][N-c1+2*c3]);
             }
         }
     }
@@ -129,38 +122,43 @@ int main() {
     auto cpu_end = std::chrono::high_resolution_clock::now();
 
     // Validate results
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
-            assert(h_Q1[i][j] == cpu_Q1[i][j]);
-            assert(h_Qbp1[i][j] == cpu_Qbp1[i][j]);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            
+            if(h_CK[i][j] != cpu_CK[i][j]) {
+                cout << i << " " <<  j << " ";
+            
+            cout << h_CK[i][j] << "  " <<  cpu_CK[i][j];
+            cout << endl;
+           }
         }
     }
 
     // Print timings
-    std::chrono::duration<double, std::milli> gpu_duration = gpu_end - gpu_start;
-    std::chrono::duration<double, std::milli> cpu_duration = cpu_end - cpu_start;
-    printf("GPU calculation took: %f ms\n", gpu_duration.count());
-    printf("CPU calculation took: %f ms\n", cpu_duration.count());
+    std::chrono::duration<double> gpu_duration = gpu_end - gpu_start;
+    std::chrono::duration<double> cpu_duration = cpu_end - cpu_start;
+    printf("GPU calculation took: %f s\n", gpu_duration.count());
+    printf("CPU calculation took: %f s\n", cpu_duration.count());
 
     // Free device memory
-    cudaFree(d_Q1_data);
-    cudaFree(d_Qbp1_data);
-    cudaFree(d_Q1);
-    cudaFree(d_Qbp1);
+    cudaFree(d_CK_data);
+    cudaFree(d_CK);
+    cudaFree(d_W_data);
+    cudaFree(d_W);
 
     // Free host memory
-    for (int i = 0; i < N; i++) {
-        free(h_Q1[i]);
-        free(h_Qbp1[i]);
-        free(cpu_Q1[i]);
-        free(cpu_Qbp1[i]);
+    for (int i = 0; i < n; i++) {
+        free(h_CK[i]);
+        free(cpu_CK[i]);
+        free(h_W[i]);
+        free(cpu_W[i]);
     }
-    free(h_Q1);
-    free(h_Qbp1);
-    free(cpu_Q1);
-    free(cpu_Qbp1);
-    free(h_Q1_array);
-    free(h_Qbp1_array);
+    free(h_CK);
+    free(cpu_CK);
+    free(h_CK_array);
+    free(h_W);
+    free(cpu_W);
+    free(h_W_array);
 
     return 0;
 }
