@@ -50,22 +50,36 @@ void computeM_CPU(int N, int c1, int *h_m1, int *h_m2, int *h_H, int *h_W, int *
     }
 }
 
+
+
 int main() {
     int N = 1000; // Example size
     int *h_m1, *h_m2, *h_H, *d_m1, *d_m2, *d_H;
     int *d_W, *d_a, *d_b;
     int *h_W, *h_a, *h_b;
 	int *CPU_H;
+	int i,j;
 
     // Allocate and initialize host memory
     h_m1 = (int *)malloc((N + 2) * (N + 2) * sizeof(int));
     h_m2 = (int *)malloc((N + 2) * (N + 2) * sizeof(int));
     h_H = (int *)malloc((N + 2) * (N + 2) * sizeof(int));
 	CPU_H = (int *)malloc((N + 2) * (N + 2) * sizeof(int));
+	int** H = new int*[N+2];
+	int **m1 = new int*[N+2];
+	int **m2 = new int*[N+2];
+	for(i=0; i<N+2; i++){
+		H[i] = CPU_H + i*(N+2);
+		m1[i] = new int[N+2];
+		m2[i] = new int[N+2];
+		for(j=0; j < N+2; j++)
+		    m1[i][j] = m2[i][j] = INT_MIN;
+	}
+
 
     for (int i = 0; i < (N + 2) * (N + 2); i++) {
-        h_m1[i] = rand() % 100; // Example initialization
-        h_m2[i] = rand() % 100; // Example initialization
+        h_m1[i] = INT_MIN;
+        h_m2[i] = INT_MIN;
         CPU_H[i] = h_H[i] = rand() % 100;  // Example initialization
     }
 
@@ -118,9 +132,21 @@ int main() {
     // CPU computation
     auto cpu_start = std::chrono::high_resolution_clock::now();
 
-    for (int c1 = 0; c1 < 2 * N - 1; c1 += 1) {
-        computeM_CPU(N, c1, h_m1, h_m2, CPU_H, h_W, h_a, h_b);
-    }
+    int c1, c3, c5;
+//    for (int c1 = 0; c1 < 2 * N - 1; c1 += 1) {
+//        computeM_CPU(N, c1, h_m1, h_m2, CPU_H, h_W, h_a, h_b);
+//    }
+
+
+		for( c1 = 0; c1 < 2 * N - 1; c1 += 1)
+		  #pragma omp parallel for
+		  for( c3 = max(0, -N + c1 + 1); c3 <= min(N - 1, c1); c3 += 1){
+			  for( c5 = 0; c5 <= c3; c5 += 1)
+				  m2[(c1-c3+1)][(c3+1)] = MAX(m2[(c1-c3+1)][(c3+1)] ,H[(c1-c3+1)][(c3+1)-(c5+1)] + h_W[(c5+1)]);
+			  for( c5 = 0; c5 <= c1 - c3; c5 += 1)
+				  m1[(c1-c3+1)][(c3+1)] = MAX(m1[(c1-c3+1)][(c3+1)] ,H[(c1-c3+1)-(c5+1)][(c3+1)] + h_W[(c5+1)]);
+			  H[(c1-c3+1)][(c3+1)] = MAX(0, MAX( H[(c1-c3+1)-1][(c3+1)-1] + sigma_host(h_a[(c1-c3+1)], h_b[(c1-c3+1)]), MAX(m1[(c1-c3+1)][(c3+1)], m2[(c1-c3+1)][(c3+1)])));
+		}
 
     auto cpu_end = std::chrono::high_resolution_clock::now();
 
