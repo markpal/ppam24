@@ -35,21 +35,6 @@ __global__ void computeM(int N, int c1, int *d_m1, int *d_m2, int *d_H, int *d_W
     }
 }
 
-// CPU function for computation
-void computeM_CPU(int N, int c1, int *h_m1, int *h_m2, int *h_H, int *h_W, int *h_a, int *h_b) {
-    for (int c3 = max(0, -N + c1 + 1); c3 <= min(N - 1, c1); c3++) {
-        int index = (c1 - c3 + 1) * (N + 2) + (c3 + 1);
-        for (int c5 = 0; c5 <= c3; c5++) {
-            h_m2[index] = MAX(h_m2[index], h_H[index - (c5 + 1)] + h_W[c5 + 1]);
-        }
-        for (int c5 = 0; c5 <= c1 - c3; c5++) {
-            h_m1[index] = MAX(h_m1[index], h_H[index - (c5 + 1) * (N + 2)] + h_W[c5 + 1]);
-        }
-        h_H[index] = MAX(0, MAX(h_H[index - (N + 2) - 1] + sigma_host(h_a[c1 - c3 + 1], h_b[c1 - c3 + 1]),
-                              MAX(h_m1[index], h_m2[index])));
-    }
-}
-
 
 
 int main() {
@@ -133,9 +118,7 @@ int main() {
     auto cpu_start = std::chrono::high_resolution_clock::now();
 
     int c1, c3, c5;
-//    for (int c1 = 0; c1 < 2 * N - 1; c1 += 1) {
-//        computeM_CPU(N, c1, h_m1, h_m2, CPU_H, h_W, h_a, h_b);
-//    }
+
 
 
 		for( c1 = 0; c1 < 2 * N - 1; c1 += 1)
