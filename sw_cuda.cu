@@ -1,4 +1,3 @@
-
 #include <cuda_runtime.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,20 +51,22 @@ void computeM_CPU(int N, int c1, int *h_m1, int *h_m2, int *h_H, int *h_W, int *
 }
 
 int main() {
-    int N = 5000; // Example size
+    int N = 1000; // Example size
     int *h_m1, *h_m2, *h_H, *d_m1, *d_m2, *d_H;
     int *d_W, *d_a, *d_b;
     int *h_W, *h_a, *h_b;
+	int *CPU_H;
 
     // Allocate and initialize host memory
     h_m1 = (int *)malloc((N + 2) * (N + 2) * sizeof(int));
     h_m2 = (int *)malloc((N + 2) * (N + 2) * sizeof(int));
     h_H = (int *)malloc((N + 2) * (N + 2) * sizeof(int));
+	CPU_H = (int *)malloc((N + 2) * (N + 2) * sizeof(int));
 
     for (int i = 0; i < (N + 2) * (N + 2); i++) {
         h_m1[i] = rand() % 100; // Example initialization
         h_m2[i] = rand() % 100; // Example initialization
-        h_H[i] = rand() % 100;  // Example initialization
+        CPU_H[i] = h_H[i] = rand() % 100;  // Example initialization
     }
 
     // Allocate device memory
@@ -110,15 +111,15 @@ int main() {
     auto gpu_end = std::chrono::high_resolution_clock::now();
 
     // Copy results back to host
-    cudaMemcpy(h_m1, d_m1, (N + 2) * (N + 2) * sizeof(int), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_m2, d_m2, (N + 2) * (N + 2) * sizeof(int), cudaMemcpyDeviceToHost);
+    //cudaMemcpy(h_m1, d_m1, (N + 2) * (N + 2) * sizeof(int), cudaMemcpyDeviceToHost);
+    //cudaMemcpy(h_m2, d_m2, (N + 2) * (N + 2) * sizeof(int), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_H, d_H, (N + 2) * (N + 2) * sizeof(int), cudaMemcpyDeviceToHost);
 
     // CPU computation
     auto cpu_start = std::chrono::high_resolution_clock::now();
 
     for (int c1 = 0; c1 < 2 * N - 1; c1 += 1) {
-        computeM_CPU(N, c1, h_m1, h_m2, h_H, h_W, h_a, h_b);
+        computeM_CPU(N, c1, h_m1, h_m2, CPU_H, h_W, h_a, h_b);
     }
 
     auto cpu_end = std::chrono::high_resolution_clock::now();
@@ -127,7 +128,7 @@ int main() {
     for (int i = 0; i < (N + 2) * (N + 2); i++) {
         assert(h_m1[i] == h_m1[i]);
         assert(h_m2[i] == h_m2[i]);
-        assert(h_H[i] == h_H[i]);
+        assert(CPU_H[i] == h_H[i]);
     }
 
     // Free device memory
