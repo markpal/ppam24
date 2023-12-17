@@ -38,23 +38,28 @@ __kernel void computeS_pluto(__global int* d_S, int n, int CHUNK_SIZE, int t2) {
     }
 }
 
-__kernel void computeS_dapt(__global int* d_S, int n, int CHUNK_SIZE, int w0) {
+
+__kernel void computeS_dapt(__global int* d_S, int n, int chunk_size, int c1) {
     int globalThreadIdx = get_global_id(0);
-    int h0_base = globalThreadIdx * CHUNK_SIZE - n + w0 + 1;
+    int c3_base = globalThreadIdx + max(0, -n + c1 + 1);
+    
+    for (int offset = 0; offset < chunk_size && (c3_base + offset) < (c1 + 1) / 2; offset++) {
+        int c3 = c3_base + offset * get_global_size(0);
+        if(c3 < (c1 + 1) / 2) {
+            for (int c5 = 0; c5 <= c3; c5++) {
+                int index = (n - c1 + c3 - 1) * n + (n - c1 + 2 * c3);
+                int index1 = (n - c1 + c3 - 1) * n + (n - c1 + c3 + c5 - 1);
+                int index2 = (n - c1 + c3 + c5 - 1 + 1) * n + (n - c1 + 2 * c3);
 
-    for (int offset = 0; offset < CHUNK_SIZE && (h0_base + offset) <= 0; offset++) {
-        int h0 = h0_base + offset;
+                d_S[index] = max(d_S[index1] + d_S[index2], d_S[index]);
+            }
+            int index = (n - c1 + c3 - 1) * n + (n - c1 + 2 * c3);
+            int index1 = (n - c1 + c3 - 1 + 1) * n + (n - c1 + 2 * c3 - 1);
 
-        for (int i3 = 0; i3 < w0; i3++) {
-            d_S[(-h0) * w0 + (w0 - h0)] = max(
-                d_S[(-h0) * w0 + (-h0 + i3)] + d_S[(-h0 + i3 + 1) * w0 + (w0 - h0)],
-                d_S[(-h0) * w0 + (w0 - h0)]
-            );
+            d_S[index] = max(d_S[index], d_S[index1] +  sigma_host(n - c1 + c3 - 1, n - c1 + 2 * c3));
+            d_S[index] = max(d_S[index], d_S[index1] +  sigma_host(n - c1 + c3 - 1, n - c1 + 2 * c3));
         }
-
-        d_S[(-h0) * w0 + (w0 - h0)] = max(
-            d_S[(-h0) * w0 + (w0 - h0)],
-            d_S[(-h0 + 1) * w0 + (w0 - h0 - 1)] + sigma_host(-h0, w0 - h0));
-        
     }
 }
+
+
