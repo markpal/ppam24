@@ -1,4 +1,3 @@
-
 #include <CL/cl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,7 +20,7 @@ int sigma_host(int a, int b) {
 
 
 int main() {
-    int n = 7500;
+    int n = 30000;
     int* h_S, *cpu_S;
 
     FILE* file = fopen("computeS.cl", "r");
@@ -92,7 +91,7 @@ if (build_status != CL_SUCCESS) {
     return 1; // or some other error code
 }
 
-    cl_kernel kernel = clCreateKernel(program, "computeS", &err);
+    cl_kernel kernel = clCreateKernel(program, "computeS_dapt", &err);
 
     cl_mem d_S = clCreateBuffer(context, CL_MEM_READ_WRITE, n * n * sizeof(int), NULL, &err);
 
@@ -121,7 +120,7 @@ if (build_status != CL_SUCCESS) {
 
     auto cpu_start = std::chrono::high_resolution_clock::now();
 
-	if(1==0)
+if(1==0)
     for (int c1 = 1; c1 < 2 * n - 2; c1 += 1) {
 		#pragma omp parallel
         for (int c3 = std::max(0, -n + c1 + 1); c3 < (c1 + 1) / 2; c3++) {
@@ -135,9 +134,9 @@ if (build_status != CL_SUCCESS) {
     auto cpu_end = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < n * n; i++) {
-     //   assert(h_S[i] == cpu_S[i]);
-        //cout << h_S[i] << " ";
-        //cout << cpu_S[i] << endl;
+       // assert(h_S[i] == cpu_S[i]);
+       // cout << h_S[i] << " ";
+       // cout << cpu_S[i] << endl;
     }
 
     std::chrono::duration<double> gpu_duration = gpu_end - gpu_start;
