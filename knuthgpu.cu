@@ -48,8 +48,6 @@ __global__ void computeCKD(int n, int w0, int** d_CK, int** d_W) {
     for (h0 = lb + globalThreadIdx; h0 < ub; h0 += blockDim.x * gridDim.x) {
         for (i2 = -h0 + 1; i2 < w0 - h0; i2++) {
             d_CK[-h0][w0 - h0] = MIN(d_CK[-h0][w0 - h0], (d_W[-h0][w0 - h0] + d_CK[-h0][i2]) + d_CK[i2][w0 - h0]);
-            cudaDeviceSynchronize();
-
         }
     }
 }
@@ -125,6 +123,7 @@ int main() {
 	for (int w0 = 2; w0 < n; w0 += 1) {
 	//cout << w0 << endl;
 	    computeCKD<<<numBlocks, threadsPerBlock>>>(N, w0, d_CK, d_W);
+            cudaDeviceSynchronize();
 	}
 
     auto gpu_end = std::chrono::high_resolution_clock::now();
